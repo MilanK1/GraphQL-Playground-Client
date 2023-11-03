@@ -1,12 +1,29 @@
 import logo from "./logo.svg";
 import "./App.css";
 import { useState } from "react";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useMutation } from "@apollo/client";
 
 const GET_CLIENT_REQ = gql`
   query GET_ONE_CLIENT($id: Int!) {
     getClient(id: $id) {
       name
+    }
+  }
+`;
+
+const UPDATE_USER_REQ = gql`
+  mutation ($username: String, $password: String, $userId: Int!) {
+    updateUser(username: $username, password: $password, userId: $userId) {
+      password
+      username
+    }
+  }
+`;
+
+const TEST_REQ = gql`
+  query ($argument: String) {
+    test(argumnet: $argument) {
+      argument
     }
   }
 `;
@@ -28,7 +45,7 @@ function App() {
   const [user, setUser] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  console.log(id, "id test");
+
   const { data, loading } = useQuery(GET_CLIENT_REQ, {
     variables: { id: +id },
   });
@@ -36,6 +53,11 @@ function App() {
   const { data: userData } = useQuery(GET_USER_REQ, {
     variables: { userId: +userID },
   });
+
+  // const [createUser, { data: DAKSDKSKDK }] = useMutation(TEST_REQ, {});
+
+  // const [IntitiationName, { data: SOMEDATA }] = useMutation(GQL_REQUEST);
+  const [updateUser, { data: updateUserData }] = useMutation(UPDATE_USER_REQ);
 
   console.log(data?.getClient, "This is client");
 
