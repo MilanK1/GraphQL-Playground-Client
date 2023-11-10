@@ -6,7 +6,9 @@ import { gql, useQuery, useMutation } from "@apollo/client";
 const GET_CLIENT_REQ = gql`
   query GET_ONE_CLIENT($id: Int!) {
     getClient(id: $id) {
+      id
       name
+      userId
     }
   }
 `;
@@ -14,6 +16,7 @@ const GET_CLIENT_REQ = gql`
 const UPDATE_USER_REQ = gql`
   mutation ($username: String, $password: String, $userId: Int!) {
     updateUser(username: $username, password: $password, userId: $userId) {
+      id
       password
       username
     }
@@ -41,12 +44,14 @@ const GET_USER_REQ = gql`
 function App() {
   const [id, setId] = useState();
   const [userID, setUserID] = useState();
+  const [userId, setUserId] = useState();
+  const [clientId, setClientId] = useState();
   const [name, setName] = useState("");
   const [user, setUser] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { data, loading } = useQuery(GET_CLIENT_REQ, {
+  const { data: clientData } = useQuery(GET_CLIENT_REQ, {
     variables: { id: +id },
   });
 
@@ -57,18 +62,44 @@ function App() {
   // const [createUser, { data: DAKSDKSKDK }] = useMutation(TEST_REQ, {});
 
   // const [IntitiationName, { data: SOMEDATA }] = useMutation(GQL_REQUEST);
-  const [updateUser, { data: updateUserData }] = useMutation(UPDATE_USER_REQ);
+  // Update user.
 
-  console.log(data?.getClient, "This is client");
+  const [updateUser, { data }] = useMutation(UPDATE_USER_REQ, {
+    update(cache) {
+      cache.writeFragment({
+        id: `Client:${clientId}`,
+        fragment: gql`
+          fragment GG on Client {
+            id
+            name
+            userId
+            __typename
+          }
+        `,
+        data: { ...clientData, userId: 333333 },
+      });
+    },
+  });
+  function updateUserInitiator() {
+    console.log(name, password, userId);
+    updateUser({
+      variables: {
+        username: name,
+        password: password,
+        userId: +userId,
+      },
+    });
+  }
+  console.log(clientData?.getClient, "This is client");
 
   return (
     <div className="App">
       <header className="App-header">
         <div>
           <h1>Get Client: </h1>
-          <input onChange={(el) => setId(el.target.value)} />
+          <input onChange={(el) => setId(+el.target.value)} />
           <br />
-          {data?.getClient?.name}
+          Client name: {clientData?.getClient?.name}
         </div>
         <div>
           <h1>Get User:</h1>
@@ -81,6 +112,38 @@ function App() {
           password: {userData?.getUser?.password}
           <br />
         </div>
+
+        <hr />
+
+        {/* Updating user */}
+
+        <div>
+          <h3>Update user here:</h3>
+          <input
+            onChange={(e) => setName(e.target.value)}
+            placeholder="User name:"
+          />
+          <br />
+          <input
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="User password:"
+          />
+          <br />
+          <input
+            onChange={(e) => setUserId(+e.target.value)}
+            placeholder="User ID:"
+          />
+
+          <h3> Set Client Properties:</h3>
+          <input
+            onChange={(e) => setClientId(+e.target.value)}
+            placeholder="Client ID: "
+          />
+
+          <button onClick={() => updateUserInitiator()}> Update </button>
+        </div>
+
+        {/* Updating user end. */}
       </header>
     </div>
   );
